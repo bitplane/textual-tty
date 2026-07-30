@@ -1,6 +1,6 @@
 # the things that don't have output files or run every time
 .PHONY: help all install test dev coverage clean \
-		pre-commit update-pre-commit
+		pre-commit update-pre-commit docs dist update-template
 
 
 PROJECT_NAME := textual-tty
@@ -18,7 +18,8 @@ test: .venv/.installed-dev  ## run the project's tests
 coverage: .venv/.installed-dev scripts/coverage.sh  ## build the html coverage report
 	scripts/coverage.sh $(PROJECT_NAME)
 
-docs: .docs/index.html ## build the documentation
+docs: .venv/.installed-dev scripts/docs.sh docs/index.md README.md pyproject.toml ## build the documentation
+	scripts/docs.sh
 
 clean:  ## delete caches and the venv
 	scripts/clean.sh
@@ -28,6 +29,9 @@ pre-commit: .git/hooks/pre-commit  ## install pre-commit into the git repo
 update-pre-commit: scripts/update-pre-commit.sh  ## autoupdate pre-commit
 	scripts/update-pre-commit.sh
 
+update-template: scripts/update-template.sh  ## pull Makefile, scripts and workflows from the template repo
+	scripts/update-template.sh
+
 dist: scripts/dist.sh ## build the distributable files
 	scripts/dist.sh $(PROJECT_NAME)
 
@@ -35,9 +39,6 @@ release: scripts/release.sh ## publish to pypi
 	scripts/release.sh $(PROJECT_NAME)
 
 # Caching doesn't work if we depend on PHONY targets
-
-.docs/index.html: .venv/.installed-dev scripts/docs.sh mkdocs.yml $(shell find . -name '*.md' -not -path './.venv/*' -not -path './.docs/*' -not -path './.git/*')
-	scripts/docs.sh $(PROJECT_NAME)
 
 .venv/.installed: pyproject.toml .venv/bin/activate scripts/install.sh $(shell find src -name '*.py')
 	scripts/install.sh $(PROJECT_NAME)
